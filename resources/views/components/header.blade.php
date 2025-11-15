@@ -7,7 +7,7 @@
     </div>
     <div class="admin-header-actions">
         @yield('header-actions')
-        <form action="#" method="POST">
+        <form action="{{ route('logout') }}" method="POST">
            
             @csrf
             <button type="submit" class="btn btn-secondary">Logout</button>

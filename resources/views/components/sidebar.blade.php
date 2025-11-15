@@ -7,14 +7,14 @@
 
     <nav class="sidebar-nav">
         <li>
-            <a href="#" 
+            <a href="{{ route('admin.dashboard') }}" 
                class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
                 <span class="nav-icon">📊</span>
                 <span class="nav-label">Dashboard</span>
             </a>
         </li>
         <li>
-            <a href="#" 
+            <a href="{{ route('admin.events.index') }}" 
                class="{{ request()->routeIs('admin.events.*') ? 'active' : '' }}">
                 <span class="nav-icon">🎪</span>
                 <span class="nav-label">Events</span>

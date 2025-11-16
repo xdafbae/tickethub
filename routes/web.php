@@ -5,6 +5,8 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\NewPasswordController;
+use App\Http\Controllers\Admin\EventController as AdminEventController;
+use App\Http\Controllers\Admin\TicketTypeController as AdminTicketTypeController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -35,7 +37,8 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth','verified','role:admin'])->group(function () {
     Route::get('/dashboard', function () { return view('admin.dashboard'); })->name('admin.dashboard');
     Route::get('/blank', function () { return view('admin.blank'); })->name('admin.blank');
-    Route::get('/events', function () { return view('admin.events.index'); })->name('admin.events.index');
+    Route::resource('/events', AdminEventController::class)->names('admin.events');
+    Route::resource('/ticket-types', AdminTicketTypeController::class)->names('admin.ticket_types');
 });
 
 Route::middleware(['auth','verified','role:user'])->group(function () {

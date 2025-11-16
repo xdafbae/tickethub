@@ -21,6 +21,13 @@
             </a>
         </li>
         <li>
+            <a href="{{ route('admin.ticket_types.index') }}" 
+               class="{{ request()->routeIs('admin.ticket_types.*') ? 'active' : '' }}">
+                <span class="nav-icon">🎫</span>
+                <span class="nav-label">Ticket Types</span>
+            </a>
+        </li>
+        <li>
             <a href="#" 
                class="{{ request()->routeIs('admin.analytics') ? 'active' : '' }}">
                 <span class="nav-icon">📈</span>

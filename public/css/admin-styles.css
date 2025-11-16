@@ -478,6 +478,30 @@ tbody tr:hover {
     background: #f8fafc;
 }
 
+/* Colored table variants */
+tbody tr:nth-child(even) {
+    background: #faf5ff;
+}
+
+.text-primary { color: var(--admin-primary); }
+.text-success { color: var(--admin-success); }
+.text-danger { color: var(--admin-danger); }
+.text-muted { color: var(--admin-muted); }
+
+.chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+}
+.chip-purple { background: #ede9fe; color: #5b21b6; }
+.chip-blue { background: #dbeafe; color: #1d4ed8; }
+.chip-yellow { background: #fef3c7; color: #92400e; }
+.chip-gray { background: #e5e7eb; color: #374151; }
+
 .badge {
     display: inline-block;
     padding: 4px 8px;

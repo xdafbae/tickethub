@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\SeatMapController as AdminSeatMapController;
 use App\Http\Controllers\User\EventBrowseController;
 use App\Http\Controllers\User\LandingController;
 use App\Models\Event;
+use App\Http\Controllers\User\SeatSelectionController;
 
 Route::get('/', [LandingController::class, 'index'])->name('landing');
 
@@ -60,4 +61,9 @@ Route::middleware(['auth','verified','role:admin'])
 // Route::middleware(['auth','verified','role:user'])->group(function () {
 //     Route::get('/events', [EventBrowseController::class, 'index'])->name('user.events.index');
 // });
+
+// Rute publik untuk Seat Selection (JSON dan aksi lock)
+Route::get('/events/{event}/seat-map', [SeatSelectionController::class, 'map'])->name('user.events.seat.map');
+Route::post('/events/{event}/seat-lock', [SeatSelectionController::class, 'lock'])->name('user.events.seat.lock');
+Route::post('/events/{event}/seat-unlock', [SeatSelectionController::class, 'unlock'])->name('user.events.seat.unlock');
 

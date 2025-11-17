@@ -4,6 +4,7 @@ namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use App\Models\Event;
+use App\Models\SeatMap;
 use Illuminate\Http\Request;
 
 class EventBrowseController extends Controller
@@ -38,6 +39,10 @@ class EventBrowseController extends Controller
     }
     public function show(Event $event)
     {
-        return view('user.events.show', compact('event'));
+        $event->load('ticketTypes');
+
+        $seatMap = SeatMap::where('event_id', $event->id)->first();
+
+        return view('user.events.show', compact('event', 'seatMap'));
     }
 }

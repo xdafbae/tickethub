@@ -7,10 +7,17 @@ use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Admin\EventController as AdminEventController;
 use App\Http\Controllers\Admin\TicketTypeController as AdminTicketTypeController;
+use App\Http\Controllers\Admin\SeatMapController as AdminSeatMapController;
+use App\Http\Controllers\User\EventBrowseController;
+use App\Http\Controllers\User\LandingController;
+use App\Models\Event;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', [LandingController::class, 'index'])->name('landing');
+
+// Route publik untuk listing event (guest bisa akses)
+Route::get('/events', [EventBrowseController::class, 'index'])->name('user.events.index');
+// Detail event publik (guest bisa akses)
+Route::get('/events/{event}', [EventBrowseController::class, 'show'])->name('user.events.show');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
@@ -34,14 +41,23 @@ Route::middleware('auth')->group(function () {
     Route::post('/email/verification-notification', [EmailVerificationController::class, 'resend'])->middleware('throttle:6,1')->name('verification.send');
 });
 
-Route::middleware(['auth','verified','role:admin'])->group(function () {
-    Route::get('/dashboard', function () { return view('admin.dashboard'); })->name('admin.dashboard');
-    Route::get('/blank', function () { return view('admin.blank'); })->name('admin.blank');
-    Route::resource('/events', AdminEventController::class)->names('admin.events');
-    Route::resource('/ticket-types', AdminTicketTypeController::class)->names('admin.ticket_types');
-});
+// Prefix admin untuk menghindari bentrok dengan route publik /events
+Route::middleware(['auth','verified','role:admin'])
+    ->prefix('admin')
+    ->group(function () {
+        Route::get('/dashboard', function () { return view('admin.dashboard'); })->name('admin.dashboard');
+        Route::get('/blank', function () { return view('admin.blank'); })->name('admin.blank');
 
-Route::middleware(['auth','verified','role:user'])->group(function () {
-    Route::get('/user/dashboard', function () { return view('user.dashboard'); })->name('user.dashboard');
-});
+        // Resource admin sekarang berada di /admin/events
+        Route::resource('events', AdminEventController::class)->names('admin.events');
+        Route::resource('ticket-types', AdminTicketTypeController::class)->names('admin.ticket_types');
+
+        Route::get('events/{event}/seat-map', [AdminSeatMapController::class, 'builder'])->name('admin.seat_map.builder');
+        Route::post('events/{event}/seat-map', [AdminSeatMapController::class, 'save'])->name('admin.seat_map.save');
+    });
+
+// Hapus proteksi user untuk /events karena sudah publik di atas
+// Route::middleware(['auth','verified','role:user'])->group(function () {
+//     Route::get('/events', [EventBrowseController::class, 'index'])->name('user.events.index');
+// });
 

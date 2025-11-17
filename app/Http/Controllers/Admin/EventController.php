@@ -43,7 +43,9 @@ class EventController extends Controller
 
     public function show(Event $event)
     {
-        return view('admin.events.show', compact('event'));
+        $event->load('ticketTypes');
+        $seatMap = \App\Models\SeatMap::where('event_id', $event->id)->first();
+        return view('admin.events.show', compact('event', 'seatMap'));
     }
 
     public function edit(Event $event)

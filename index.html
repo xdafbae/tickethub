@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="EventHub - Your gateway to amazing events. Find and book tickets for concerts, conferences, festivals, and more.">
+    <title>EventHub - Find & Book Tickets for Amazing Events</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="script.js" defer></script>
+</head>
+<body>
+    <main class="min-h-screen text-white">
+        <!-- Header -->
+        <header class="sticky top-0 z-50 p-4 border-b border-white/10">
+            <div class="container mx-auto max-w-7xl">
+                <div class="flex h-14 items-center justify-between px-6 liquid-glass-header rounded-2xl">
+                    <a href="#" class="flex items-center gap-2">
+                        <div class="w-8 h-8 bg-gradient-to-br from-pink-500 to-orange-500 rounded-lg flex items-center justify-center">
+                            <span class="font-bold text-white text-lg">E</span>
+                        </div>
+                        <span class="font-bold tracking-wide text-white text-lg">EventHub</span>
+                    </a>
+
+                    <nav class="hidden items-center gap-8 text-sm text-white/80 md:flex">
+                        <a href="#events" class="hover:text-white transition-colors">Events</a>
+                        <a href="#categories" class="hover:text-white transition-colors">Categories</a>
+                        <a href="#trending" class="hover:text-white transition-colors">Trending</a>
+                        <a href="#about" class="hover:text-white transition-colors">About</a>
+                    </nav>
+
+                    <div class="hidden md:flex items-center gap-4">
+                        <button class="text-white/80 hover:text-white transition-colors">Login</button>
+                        <a href="#signup" class="bg-gradient-to-r from-pink-500 to-orange-500 text-white font-medium rounded-lg px-6 py-2 hover:brightness-110 transition-all">
+                            Sign Up
+                        </a>
+                    </div>
+
+                    <button class="md:hidden mobile-menu-btn" aria-label="Open menu">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="mobile-menu hidden">
+                <div class="container mx-auto px-4 py-4">
+                    <nav class="flex flex-col gap-4 text-gray-200">
+                        <a href="#events" class="hover:text-white transition-colors">Events</a>
+                        <a href="#categories" class="hover:text-white transition-colors">Categories</a>
+                        <a href="#trending" class="hover:text-white transition-colors">Trending</a>
+                        <a href="#about" class="hover:text-white transition-colors">About</a>
+                        <div class="border-t border-white/10 pt-4 mt-4 flex flex-col gap-3">
+                            <button class="text-white hover:text-white transition-colors">Login</button>
+                            <a href="#signup" class="bg-gradient-to-r from-pink-500 to-orange-500 text-white font-medium rounded-lg px-6 py-2 text-center">
+                                Sign Up
+                            </a>
+                        </div>
+                    </nav>
+                </div>
+            </div>
+        </header>
+
+        <!-- Hero Section -->
+        <section class="relative overflow-hidden pt-12 pb-24">
+            <div class="container mx-auto px-4 max-w-7xl">
+                <div class="flex flex-col items-center justify-center text-center py-8 sm:py-16">
+                    <h1 class="text-5xl md:text-6xl font-extrabold tracking-tight mb-6">
+                        <span class="block mb-2">Discover Amazing</span>
+                        <span class="bg-gradient-to-r from-pink-400 via-red-400 to-orange-400 bg-clip-text text-transparent">Events Near You</span>
+                    </h1>
+                    <p class="text-white/70 text-lg max-w-2xl mb-8">
+                        Find and book tickets to concerts, conferences, festivals, sports events, and more. Don't miss out on unforgettable experiences.
+                    </p>
+
+                    <!-- Search Bar -->
+                    <div class="w-full max-w-2xl mb-8">
+                        <div class="flex flex-col sm:flex-row gap-3 p-1 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-sm">
+                            <input type="text" id="searchInput" placeholder="Search events, location..." class="flex-1 bg-transparent text-white placeholder-white/50 px-6 py-3 outline-none text-sm">
+                            <button id="searchBtn" class="bg-gradient-to-r from-pink-500 to-orange-500 text-white font-medium rounded-lg px-6 py-3 hover:brightness-110 transition-all whitespace-nowrap" onclick="handleSearch()">
+                                Search
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Quick Stats -->
+                    <div class="grid grid-cols-3 gap-4 w-full max-w-xl">
+                        <div class="text-center">
+                            <div class="text-3xl font-bold text-orange-400">1000+</div>
+                            <div class="text-sm text-white/60">Events</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-3xl font-bold text-pink-400">250K+</div>
+                            <div class="text-sm text-white/60">Attendees</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-3xl font-bold text-red-400">50+</div>
+                            <div class="text-sm text-white/60">Cities</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Categories Section -->
+        <section id="categories" class="py-16">
+            <div class="container mx-auto px-4 max-w-7xl">
+                <h2 class="text-4xl font-extrabold mb-12 text-center">Browse by Category</h2>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <button class="category-btn group relative overflow-hidden rounded-2xl p-6 text-left transition-all hover:scale-105" data-category="music">
+                        <div class="absolute inset-0 bg-gradient-to-br from-pink-500 to-red-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        <div class="relative z-10">
+                            <div class="text-3xl mb-2">🎵</div>
+                            <div class="font-semibold">Music</div>
+                            <div class="text-sm text-white/70">Concerts & Festivals</div>
+                        </div>
+                    </button>
+
+                    <button class="category-btn group relative overflow-hidden rounded-2xl p-6 text-left transition-all hover:scale-105" data-category="sports">
+                        <div class="absolute inset-0 bg-gradient-to-br from-blue-500 to-cyan-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        <div class="relative z-10">
+                            <div class="text-3xl mb-2">⚽</div>
+                            <div class="font-semibold">Sports</div>
+                            <div class="text-sm text-white/70">Games & Tournaments</div>
+                        </div>
+                    </button>
+
+                    <button class="category-btn group relative overflow-hidden rounded-2xl p-6 text-left transition-all hover:scale-105" data-category="theater">
+                        <div class="absolute inset-0 bg-gradient-to-br from-purple-500 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        <div class="relative z-10">
+                            <div class="text-3xl mb-2">🎭</div>
+                            <div class="font-semibold">Theater</div>
+                            <div class="text-sm text-white/70">Shows & Performances</div>
+                        </div>
+                    </button>
+
+                    <button class="category-btn group relative overflow-hidden rounded-2xl p-6 text-left transition-all hover:scale-105" data-category="tech">
+                        <div class="absolute inset-0 bg-gradient-to-br from-green-500 to-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        <div class="relative z-10">
+                            <div class="text-3xl mb-2">💻</div>
+                            <div class="font-semibold">Technology</div>
+                            <div class="text-sm text-white/70">Conferences & Talks</div>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Featured Events Section -->
+        <section id="events" class="py-20">
+            <div class="container mx-auto px-4 max-w-7xl">
+                <div class="flex items-center justify-between mb-12">
+                    <h2 class="text-4xl font-extrabold">Featured Events</h2>
+                    <button class="text-orange-400 hover:text-orange-300 transition-colors font-medium text-sm" onclick="resetFilter()">
+                        Show All →
+                    </button>
+                </div>
+
+                <!-- Events Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="eventsGrid">
+                    <!-- Event cards will be generated here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Added Trending Section -->
+        <section id="trending" class="py-20 bg-white/5 rounded-3xl mx-4 md:mx-auto md:max-w-7xl mb-20">
+            <div class="container mx-auto px-4 max-w-7xl">
+                <h2 class="text-4xl font-extrabold mb-12">Trending This Week</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="trendingGrid">
+                    <!-- Trending events -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Stats Section -->
+        <section class="py-16 bg-white/5 rounded-3xl mx-4 md:mx-auto md:max-w-7xl mb-20">
+            <div class="container mx-auto px-4 max-w-7xl">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="text-center">
+                        <div class="text-5xl font-bold bg-gradient-to-r from-pink-400 to-orange-400 bg-clip-text text-transparent mb-2">50M+</div>
+                        <p class="text-white/70">Tickets Sold</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-5xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent mb-2">10M+</div>
+                        <p class="text-white/70">Active Users</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-5xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-2">200+</div>
+                        <p class="text-white/70">Countries</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- About Section -->
+        <section id="about" class="py-20">
+            <div class="container mx-auto px-4 max-w-7xl">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                    <div>
+                        <h2 class="text-4xl font-extrabold mb-6">Why Choose EventHub?</h2>
+                        <ul class="space-y-4">
+                            <li class="flex items-start gap-3">
+                                <div class="flex-shrink-0 text-orange-400 text-xl">✓</div>
+                                <div>
+                                    <h3 class="font-semibold mb-1">Secure Booking</h3>
+                                    <p class="text-white/70 text-sm">Safe and secure payment processing with 256-bit encryption</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <div class="flex-shrink-0 text-orange-400 text-xl">✓</div>
+                                <div>
+                                    <h3 class="font-semibold mb-1">Instant Confirmation</h3>
+                                    <p class="text-white/70 text-sm">Get your tickets instantly via email within seconds</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <div class="flex-shrink-0 text-orange-400 text-xl">✓</div>
+                                <div>
+                                    <h3 class="font-semibold mb-1">24/7 Support</h3>
+                                    <p class="text-white/70 text-sm">Round-the-clock customer support team</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <div class="flex-shrink-0 text-orange-400 text-xl">✓</div>
+                                <div>
+                                    <h3 class="font-semibold mb-1">Flexible Options</h3>
+                                    <p class="text-white/70 text-sm">Multiple payment and delivery options available</p>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-white/5 rounded-2xl p-6 border border-white/10 hover:bg-white/10 transition-all">
+                            <div class="text-4xl mb-2">🎫</div>
+                            <p class="text-sm text-white/70">Easy Booking</p>
+                        </div>
+                        <div class="bg-white/5 rounded-2xl p-6 border border-white/10 hover:bg-white/10 transition-all">
+                            <div class="text-4xl mb-2">💳</div>
+                            <p class="text-sm text-white/70">Safe Payment</p>
+                        </div>
+                        <div class="bg-white/5 rounded-2xl p-6 border border-white/10 hover:bg-white/10 transition-all">
+                            <div class="text-4xl mb-2">📱</div>
+                            <p class="text-sm text-white/70">Mobile Ready</p>
+                        </div>
+                        <div class="bg-white/5 rounded-2xl p-6 border border-white/10 hover:bg-white/10 transition-all">
+                            <div class="text-4xl mb-2">🌍</div>
+                            <p class="text-sm text-white/70">Global Events</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Testimonials Section -->
+        <section class="py-20">
+            <div class="container mx-auto px-4 max-w-7xl">
+                <h2 class="text-4xl font-extrabold mb-12 text-center">What Our Users Say</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-white/5 rounded-2xl p-8 border border-white/10">
+                        <div class="flex items-center gap-4 mb-4">
+                            <div class="w-12 h-12 bg-gradient-to-br from-pink-500 to-orange-500 rounded-full"></div>
+                            <div>
+                                <div class="font-semibold">Sarah Johnson</div>
+                                <div class="text-sm text-white/70">Concert Enthusiast</div>
+                            </div>
+                        </div>
+                        <p class="text-white/80">"EventHub makes finding and booking tickets so easy. I've attended 5 concerts this year because of their platform!"</p>
+                        <div class="mt-4 text-orange-400">⭐⭐⭐⭐⭐</div>
+                    </div>
+
+                    <div class="bg-white/5 rounded-2xl p-8 border border-white/10">
+                        <div class="flex items-center gap-4 mb-4">
+                            <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full"></div>
+                            <div>
+                                <div class="font-semibold">Mike Chen</div>
+                                <div class="text-sm text-white/70">Sports Fan</div>
+                            </div>
+                        </div>
+                        <p class="text-white/80">"Best platform for sports tickets. The instant confirmation and mobile tickets are game-changers!"</p>
+                        <div class="mt-4 text-orange-400">⭐⭐⭐⭐⭐</div>
+                    </div>
+
+                    <div class="bg-white/5 rounded-2xl p-8 border border-white/10">
+                        <div class="flex items-center gap-4 mb-4">
+                            <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full"></div>
+                            <div>
+                                <div class="font-semibold">Emily Rodriguez</div>
+                                <div class="text-sm text-white/70">Event Organizer</div>
+                            </div>
+                        </div>
+                        <p class="text-white/80">"As an organizer, EventHub's tools help me reach more people and manage tickets efficiently."</p>
+                        <div class="mt-4 text-orange-400">⭐⭐⭐⭐⭐</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Newsletter Section -->
+        <section class="py-16 bg-gradient-to-r from-pink-500/10 to-orange-500/10 rounded-3xl mx-4 md:mx-auto md:max-w-7xl mb-20">
+            <div class="container mx-auto px-4 max-w-2xl text-center">
+                <h2 class="text-4xl font-extrabold mb-4">Never Miss an Event</h2>
+                <p class="text-white/70 mb-8">Subscribe to get notified about upcoming events in your favorite categories.</p>
+                <form class="flex flex-col sm:flex-row gap-3" onsubmit="handleNewsletterSignup(event)">
+                    <input type="email" placeholder="Enter your email" class="flex-1 bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/50 outline-none focus:border-white/40 transition-colors" required>
+                    <button type="submit" class="bg-gradient-to-r from-pink-500 to-orange-500 text-white font-medium rounded-lg px-8 py-3 hover:brightness-110 transition-all whitespace-nowrap">
+                        Subscribe
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="border-t border-white/10 py-12">
+            <div class="container mx-auto px-4 max-w-7xl">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+                    <div>
+                        <div class="flex items-center gap-2 mb-4">
+                            <div class="w-8 h-8 bg-gradient-to-br from-pink-500 to-orange-500 rounded-lg flex items-center justify-center">
+                                <span class="font-bold text-white">E</span>
+                            </div>
+                            <span class="font-bold text-white">EventHub</span>
+                        </div>
+                        <p class="text-white/60 text-sm">Your gateway to amazing events worldwide.</p>
+                    </div>
+
+                    <div>
+                        <h5 class="font-semibold mb-4">Company</h5>
+                        <ul class="space-y-2 text-sm text-white/60">
+                            <li><a href="#" class="hover:text-white transition-colors">About Us</a></li>
+                            <li><a href="#" class="hover:text-white transition-colors">Careers</a></li>
+                            <li><a href="#" class="hover:text-white transition-colors">Blog</a></li>
+                            <li><a href="#" class="hover:text-white transition-colors">Press</a></li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h5 class="font-semibold mb-4">Support</h5>
+                        <ul class="space-y-2 text-sm text-white/60">
+                            <li><a href="#" class="hover:text-white transition-colors">Help Center</a></li>
+                            <li><a href="#" class="hover:text-white transition-colors">Contact Us</a></li>
+                            <li><a href="#" class="hover:text-white transition-colors">FAQ</a></li>
+                            <li><a href="#" class="hover:text-white transition-colors">Refunds</a></li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h5 class="font-semibold mb-4">Follow Us</h5>
+                        <ul class="space-y-2 text-sm text-white/60">
+                            <li><a href="#" class="hover:text-white transition-colors">Twitter</a></li>
+                            <li><a href="#" class="hover:text-white transition-colors">Instagram</a></li>
+                            <li><a href="#" class="hover:text-white transition-colors">Facebook</a></li>
+                            <li><a href="#" class="hover:text-white transition-colors">TikTok</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="border-t border-white/10 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-white/60">
+                    <p>© 2025 EventHub. All rights reserved.</p>
+                    <div class="flex gap-6">
+                        <a href="#" class="hover:text-white transition-colors">Privacy Policy</a>
+                        <a href="#" class="hover:text-white transition-colors">Terms of Service</a>
+                        <a href="#" class="hover:text-white transition-colors">Cookies</a>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </main>
+</body>
+</html>

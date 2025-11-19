@@ -120,6 +120,14 @@ class SeatSelectionController extends Controller
             }
         }
 
+        // Bangun layout & locks dari Redis
+        // Tambahkan fallback dari session jika Redis tidak aktif
+        $sessionId = $request->session()->getId();
+        $sessionSeats = (array)$request->session()->get('fallback_locked_seats:' . $event->id, []);
+        foreach ($sessionSeats as $sid) {
+            $locks[$sid] = ['by_me' => true, 'by' => $sessionId];
+        }
+
         return response()->json([
             'layout' => $nodes,
             'locks' => $locks,
@@ -167,6 +175,12 @@ class SeatSelectionController extends Controller
             }
         }
 
+        // Setelah mencoba lock via Redis, simpan juga ke session sebagai fallback
+        $sessionKey = 'fallback_locked_seats:' . $event->id;
+        $current = (array)$request->session()->get($sessionKey, []);
+        $next = array_values(array_unique(array_merge($current, $seats)));
+        $request->session()->put($sessionKey, $next);
+
         return response()->json([
             'locked' => $locked,
             'failed' => $failed,
@@ -202,6 +216,12 @@ class SeatSelectionController extends Controller
                 $skipped[] = $seatId;
             }
         }
+
+        // Hapus juga dari session fallback
+        $sessionKey = 'fallback_locked_seats:' . $event->id;
+        $current = (array)$request->session()->get($sessionKey, []);
+        $remaining = array_values(array_diff($current, $seats));
+        $request->session()->put($sessionKey, $remaining);
 
         return response()->json([
             'released' => $released,

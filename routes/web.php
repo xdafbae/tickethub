@@ -12,6 +12,8 @@ use App\Http\Controllers\User\EventBrowseController;
 use App\Http\Controllers\User\LandingController;
 use App\Models\Event;
 use App\Http\Controllers\User\SeatSelectionController;
+use App\Http\Controllers\User\CartController;
+use App\Http\Controllers\Admin\PromoController as AdminPromoController;
 
 Route::get('/', [LandingController::class, 'index'])->name('landing');
 
@@ -43,19 +45,18 @@ Route::middleware('auth')->group(function () {
 });
 
 // Prefix admin untuk menghindari bentrok dengan route publik /events
-Route::middleware(['auth','verified','role:admin'])
-    ->prefix('admin')
-    ->group(function () {
-        Route::get('/dashboard', function () { return view('admin.dashboard'); })->name('admin.dashboard');
-        Route::get('/blank', function () { return view('admin.blank'); })->name('admin.blank');
+Route::middleware(['auth','verified','role:admin'])->prefix('admin')->group(function () {
+    Route::get('/dashboard', function () { return view('admin.dashboard'); })->name('admin.dashboard');
+    Route::get('/blank', function () { return view('admin.blank'); })->name('admin.blank');
 
-        // Resource admin sekarang berada di /admin/events
-        Route::resource('events', AdminEventController::class)->names('admin.events');
-        Route::resource('ticket-types', AdminTicketTypeController::class)->names('admin.ticket_types');
+    // Resource admin sekarang berada di /admin/events
+    Route::resource('events', AdminEventController::class)->names('admin.events');
+    Route::resource('ticket-types', AdminTicketTypeController::class)->names('admin.ticket_types');
 
-        Route::get('events/{event}/seat-map', [AdminSeatMapController::class, 'builder'])->name('admin.seat_map.builder');
-        Route::post('events/{event}/seat-map', [AdminSeatMapController::class, 'save'])->name('admin.seat_map.save');
-    });
+    Route::get('events/{event}/seat-map', [AdminSeatMapController::class, 'builder'])->name('admin.seat_map.builder');
+    Route::post('events/{event}/seat-map', [AdminSeatMapController::class, 'save'])->name('admin.seat_map.save');
+    Route::resource('promos', AdminPromoController::class)->names('admin.promos');
+});
 
 // Hapus proteksi user untuk /events karena sudah publik di atas
 // Route::middleware(['auth','verified','role:user'])->group(function () {
@@ -66,4 +67,14 @@ Route::middleware(['auth','verified','role:admin'])
 Route::get('/events/{event}/seat-map', [SeatSelectionController::class, 'map'])->name('user.events.seat.map');
 Route::post('/events/{event}/seat-lock', [SeatSelectionController::class, 'lock'])->name('user.events.seat.lock');
 Route::post('/events/{event}/seat-unlock', [SeatSelectionController::class, 'unlock'])->name('user.events.seat.unlock');
+
+// Cart & Checkout (User)
+Route::prefix('events/{event}')->group(function () {
+    Route::get('/cart', [CartController::class, 'cart'])->name('user.cart.show');
+    Route::post('/cart', [CartController::class, 'update'])->name('user.cart.update');
+    Route::get('/checkout', [CartController::class, 'checkout'])->name('user.checkout.show');
+    Route::post('/checkout/confirm', [CartController::class, 'confirm'])->name('user.checkout.confirm');
+    // Tambah: apply promo AJAX
+    Route::post('/checkout/apply-promo', [CartController::class, 'applyPromo'])->name('user.checkout.apply_promo');
+});
 

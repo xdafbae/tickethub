@@ -28,6 +28,13 @@
             </a>
         </li>
         <li>
+            <a href="{{ route('admin.promos.index') }}"
+               class="{{ request()->routeIs('admin.promos.*') ? 'active' : '' }}">
+                <span class="nav-icon">🏷️</span>
+                <span class="nav-label">Promos</span>
+            </a>
+        </li>
+        <li>
             <a href="#" 
                class="{{ request()->routeIs('admin.analytics') ? 'active' : '' }}">
                 <span class="nav-icon">📈</span>
@@ -42,14 +49,4 @@
             </a>
         </li>
     </nav>
-
-    <div class="sidebar-footer">
-        <div class="user-info">
-            <div class="user-avatar"></div>
-            <div class="user-details">
-                <p class="user-name">Dafa</p>
-                <p class="user-role">Admin</p>
-            </div>
-        </div>
-    </div>
 </aside>

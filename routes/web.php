@@ -14,6 +14,7 @@ use App\Models\Event;
 use App\Http\Controllers\User\SeatSelectionController;
 use App\Http\Controllers\User\CartController;
 use App\Http\Controllers\Admin\PromoController as AdminPromoController;
+use App\Http\Controllers\WebhookController;
 
 Route::get('/', [LandingController::class, 'index'])->name('landing');
 
@@ -77,4 +78,11 @@ Route::prefix('events/{event}')->group(function () {
     // Tambah: apply promo AJAX
     Route::post('/checkout/apply-promo', [CartController::class, 'applyPromo'])->name('user.checkout.apply_promo');
 });
+
+// Halaman status pembayaran (di luar prefix event agar mudah di-redirect)
+Route::get('/orders/{order}/status', [\App\Http\Controllers\User\CartController::class, 'paymentStatus'])->name('user.payment.status');
+Route::post('/orders/{order}/status/check', [\App\Http\Controllers\User\CartController::class, 'checkPaymentStatus'])->name('user.payment.status.check');
+
+// Webhook endpoints (tanpa CSRF)
+Route::post('/webhooks/midtrans', [WebhookController::class, 'midtrans'])->name('webhooks.midtrans');
 

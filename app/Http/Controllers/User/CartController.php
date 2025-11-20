@@ -177,8 +177,140 @@ class CartController extends Controller
             $promo->increment('used_count');
         }
 
-        return redirect()->route('user.events.show', ['event' => $event->id])
-            ->with('status', 'Order valid. ' . ($promo ? "Promo {$promo->code} diterapkan: diskon Rp " . number_format($discount,0,',','.') . "." : 'Silakan lanjut ke pembayaran.'));
+        // Buat Order
+        $order = \App\Models\Order::create([
+            'event_id' => $event->id,
+            'user_id' => optional($request->user())->id,
+            'buyer_name' => $validated['buyer']['name'],
+            'buyer_email' => $validated['buyer']['email'],
+            'buyer_phone' => $validated['buyer']['phone'] ?? null,
+            'subtotal' => (int)$total,
+            'discount' => (int)$discount,
+            'total' => (int)$finalTotal,
+            'status' => 'pending',
+            'promo_code' => $promoCode ?: null,
+            'seats' => $mySeats,
+            'items' => $derivedItems,
+        ]);
+
+        // Bangun payload Midtrans
+        $orderId = 'ORDER-' . $order->id . '-' . now()->format('YmdHis');
+        $itemDetails = [];
+        foreach ($derivedItems as $it) {
+            $itemDetails[] = [
+                'id' => (string)$it['id'],
+                'price' => (int)$it['price'],
+                'quantity' => (int)$it['qty'],
+                'name' => (string)$it['name'],
+            ];
+        }
+        if ($discount > 0) {
+            $itemDetails[] = [
+                'id' => 'PROMO',
+                'price' => -(int)$discount,
+                'quantity' => 1,
+                'name' => 'Diskon Promo',
+            ];
+        }
+
+        // Hitung total dari item_details
+        $grossFromItems = 0;
+        foreach ($itemDetails as $it) {
+            $grossFromItems += ((int)$it['price']) * ((int)$it['quantity']);
+        }
+
+        // Jika ada selisih dengan finalTotal, tambahkan Adjustment agar total match
+        $diff = (int)$finalTotal - (int)$grossFromItems;
+        if ($diff !== 0) {
+            $itemDetails[] = [
+                'id' => 'ADJUSTMENT',
+                'price' => (int)$diff,
+                'quantity' => 1,
+                'name' => 'Penyesuaian Total',
+            ];
+            $grossFromItems += $diff;
+        }
+        $finalTotal = (int)$grossFromItems;
+
+        $customer = [
+            'first_name' => $order->buyer_name,
+            'email' => $order->buyer_email,
+            'phone' => $order->buyer_phone,
+        ];
+
+        // Bangun payload sesuai total final
+        $payload = \App\Services\Payments\MidtransGateway::buildPayload(
+            $orderId,
+            (int)$finalTotal,
+            $customer,
+            $itemDetails
+        );
+
+        // Set finish redirect ke halaman status order
+        $payload['callbacks'] = [
+            'finish' => route('user.payment.status', ['order' => $order->id]),
+        ];
+
+        // Pilihan channel pembayaran (VA multi-bank + e-wallet)
+        $requestedChannel = strtolower((string)$request->input('payment_channel', ''));
+        $channelMap = [
+            'permata' => 'permata_va',
+            'bri' => 'bri_va',
+            'bca' => 'bca_va',
+            'bni' => 'bni_va',
+            'gopay' => 'gopay',
+            'qris' => 'qris',
+            'shopeepay' => 'shopeepay',
+        ];
+
+        // Daftar channel default dari config/env (CSV)
+        $enabledChannels = (array)config('services.midtrans.enabled_channels', []);
+        if (empty($enabledChannels)) {
+            $enabledChannels = array_values(array_filter(array_map('trim', explode(',', (string)env(
+                'MIDTRANS_ENABLED_CHANNELS',
+                'permata_va,gopay,qris,shopeepay,bri_va,bni_va,bca_va'
+            )))));
+        }
+
+        // Jika user memilih channel spesifik, pakai itu; kalau tidak, tampilkan semua default
+        if ($requestedChannel !== '' && isset($channelMap[$requestedChannel])) {
+            $payload['enabled_payments'] = [$channelMap[$requestedChannel]];
+        } else {
+            $payload['enabled_payments'] = $enabledChannels;
+        }
+
+        // (Opsional) set masa berlaku VA
+        $payload['expiry'] = [
+            'start_time' => now()->format('Y-m-d H:i:s O'),
+            'unit' => 'days',
+            'duration' => 1,
+        ];
+
+        $serverKey = config('services.midtrans.server_key', env('MIDTRANS_SERVER_KEY'));
+        $isProd = (bool)config('services.midtrans.is_production', env('MIDTRANS_IS_PRODUCTION', false));
+        $gateway = new \App\Services\Payments\MidtransGateway();
+        try {
+            $snap = $gateway->createSnapTransaction($payload, (string)$serverKey, $isProd);
+        } catch (\Throwable $e) {
+            return back()->withErrors(['payment' => 'Gagal membuat transaksi Midtrans: ' . $e->getMessage()]);
+        }
+
+        // Simpan external_ref untuk verifikasi webhook
+        $order->update(['external_ref' => $orderId]);
+
+        // Buat Payment
+        \App\Models\Payment::create([
+            'order_id' => $order->id,
+            'provider' => 'midtrans',
+            'provider_transaction_id' => $snap['token'] ?? null,
+            'status' => 'pending',
+            'amount' => (int)$finalTotal,
+            'redirect_url' => $snap['redirect_url'] ?? null,
+            'raw_payload' => $snap['raw'] ?? [],
+        ]);
+
+        // Redirect ke halaman pembayaran Midtrans
+        return redirect()->away((string)($snap['redirect_url'] ?? '/'))->with('status', 'Dialihkan ke halaman pembayaran Midtrans.');
     }
 
     // Endpoint AJAX: terapkan promo real-time di checkout
@@ -397,5 +529,70 @@ class CartController extends Controller
         $finalTotal = $total - $discount;
 
         return [$promo, $discount, $finalTotal, null];
+    }
+
+    // Halaman status pembayaran
+    public function paymentStatus(\App\Models\Order $order)
+    {
+        $payment = \App\Models\Payment::where('order_id', $order->id)->latest()->first();
+        return view('user.payment_status', [
+            'order' => $order,
+            'payment' => $payment,
+        ]);
+    }
+
+    // Tombol "Check Status": tarik status terbaru dari Midtrans API dan sinkronkan
+    public function checkPaymentStatus(\App\Models\Order $order, Request $request)
+    {
+        $externalRef = $order->external_ref;
+        if (!$externalRef) {
+            return back()->withErrors(['status' => 'External ref tidak tersedia untuk order ini.']);
+        }
+
+        $serverKey = config('services.midtrans.server_key', env('MIDTRANS_SERVER_KEY', ''));
+        $isProd = (bool)config('services.midtrans.is_production', env('MIDTRANS_IS_PRODUCTION', false));
+        $base = $isProd ? 'https://api.midtrans.com' : 'https://api.sandbox.midtrans.com';
+        try {
+            $res = \Illuminate\Support\Facades\Http::withBasicAuth($serverKey, '')
+                ->acceptJson()
+                ->get($base . "/v2/{$externalRef}/status");
+
+            if (!$res->successful()) {
+                return back()->withErrors(['status' => 'Gagal mengambil status: ' . $res->body()]);
+            }
+
+            $p = $res->json();
+            // Map ke status internal (selaras dengan webhook)
+            $trxStatus = $p['transaction_status'] ?? 'pending';
+            $fraudStatus = $p['fraud_status'] ?? null;
+
+            $targetPaymentStatus = 'pending';
+            $targetOrderStatus = 'pending';
+
+            if (in_array($trxStatus, ['capture','settlement'], true) && ($fraudStatus === null || $fraudStatus === 'accept')) {
+                $targetPaymentStatus = 'paid';
+                $targetOrderStatus = 'paid';
+            } elseif (in_array($trxStatus, ['cancel','deny'], true)) {
+                $targetPaymentStatus = 'failed';
+                $targetOrderStatus = 'failed';
+            } elseif ($trxStatus === 'expire') {
+                $targetPaymentStatus = 'expired';
+                $targetOrderStatus = 'expired';
+            }
+
+            $payment = \App\Models\Payment::where('order_id', $order->id)->latest()->first();
+            if ($payment) {
+                $payment->update([
+                    'provider_transaction_id' => $p['transaction_id'] ?? $payment->provider_transaction_id,
+                    'status' => $targetPaymentStatus,
+                    'raw_payload' => $p,
+                ]);
+            }
+            $order->update(['status' => $targetOrderStatus]);
+
+            return back()->with('status', 'Status diperbarui: ' . $targetOrderStatus);
+        } catch (\Throwable $e) {
+            return back()->withErrors(['status' => 'Error: ' . $e->getMessage()]);
+        }
     }
 }

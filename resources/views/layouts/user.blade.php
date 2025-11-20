@@ -8,7 +8,7 @@
 
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/admin-styles.css') }}?v={{ filemtime(public_path('css/admin-styles.css')) }}">
-    <link rel="stylesheet" href="{{ asset('css/styles.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/styles.css') }}?v={{ filemtime(public_path('css/styles.css')) }}">
 
     @yield('additional-css')
 </head>
@@ -57,8 +57,8 @@
         </div>
     </footer>
 
-    <script src="{{ asset('js/admin-script.js') }}"></script>
-    <script src="{{ asset('js/script.js') }}"></script>
+    <script src="{{ asset('js/admin-script.js') }}?v={{ filemtime(public_path('js/admin-script.js')) }}"></script>
+    <script src="{{ asset('js/script.js') }}?v={{ filemtime(public_path('js/script.js')) }}"></script>
     @yield('additional-js')
 </body>
 </html>

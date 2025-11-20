@@ -12,10 +12,13 @@
   --white-5: rgba(255, 255, 255, 0.05);
   --white-10: rgba(255, 255, 255, 0.1);
   --white-20: rgba(255, 255, 255, 0.2);
+  --white-40: rgba(255, 255, 255, 0.4);
   --white-50: rgba(255, 255, 255, 0.5);
   --white-60: rgba(255, 255, 255, 0.6);
   --white-70: rgba(255, 255, 255, 0.7);
   --white-80: rgba(255, 255, 255, 0.8);
+  --green-500: #22c55e;
+  --emerald-500: #10b981;
 }
 
 * {
@@ -962,4 +965,539 @@ a {
     font-size: 1.875rem; /* 30px */
   }
 }
+
+/* Fallback utilities for Tailwind-like classes */
+.text-white { color: #ffffff; }
+.text-white\/70 { color: rgba(255,255,255,0.7); }
+.text-transparent { color: transparent; }
+.bg-clip-text { -webkit-background-clip: text; background-clip: text; }
+.overflow-x-hidden { overflow-x: hidden; }
+.pt-12 { padding-top: 3rem; }
+.pb-24 { padding-bottom: 6rem; }
+.grid { display: grid; }
+.grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.gap-6 { gap: 1.5rem; }
+
+/* Gradient text helper to replace multiple Tailwind classes */
+.gradient-text {
+  background-image: linear-gradient(90deg, var(--pink-400), var(--red-400), var(--orange-400));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  display: inline-block;
+}
+
+/* Status banner untuk halaman pembayaran */
+.status-banner {
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.status-paid   { background: rgba(34,197,94,0.15); color: #16a34a; border-color: rgba(34,197,94,0.3); }
+.status-pending{ background: rgba(59,130,246,0.15); color: #2563eb; border-color: rgba(59,130,246,0.3); }
+.status-failed { background: rgba(239,68,68,0.15); color: #dc2626; border-color: rgba(239,68,68,0.3); }
+.status-expired{ background: rgba(245,158,11,0.15); color: #f59e0b; border-color: rgba(245,158,11,0.3); }
+
+/* Grid ringkas untuk detail pembayaran */
+.info-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 16px;
+}
+.info-item { display: flex; flex-direction: column; gap: 4px; }
+.info-label { font-size: 12px; color: rgba(255,255,255,0.7); text-transform: uppercase; letter-spacing: .4px; }
+.info-value { font-size: 14px; color: #fff; }
+
+/* Baris aksi */
+.action-row { margin-top: 16px; display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* Teks bantuan */
+.helper-text { color: rgba(255,255,255,0.7); margin-top: 12px; font-size: 13px; }
+.mb-2 {
+  margin-bottom: 0.5rem;
+}
+
+.mb-4 {
+  margin-bottom: 1rem;
+}
+
+.mb-6 {
+  margin-bottom: 1.5rem;
+}
+
+.mb-8 {
+  margin-bottom: 2rem;
+}
+
+.mb-12 {
+  margin-bottom: 3rem;
+}
+
+/* Event Card */
+.event-card {
+  background: var(--white-5);
+  border: 1px solid var(--white-10);
+  border-radius: 1rem;
+  overflow: hidden;
+  transition: all 0.3s;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.event-card:hover {
+  border-color: var(--white-20);
+  background: var(--white-10);
+  transform: translateY(-4px);
+}
+
+.event-card img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+}
+
+.event-card-body {
+  padding: 1.5rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.event-card-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+}
+
+.event-card-meta {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+  color: var(--white-70);
+}
+
+.event-card-meta span {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.event-card-desc {
+  font-size: 0.875rem;
+  color: var(--white-70);
+  margin-bottom: 1rem;
+  flex: 1;
+}
+
+.event-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 1rem;
+  border-top: 1px solid var(--white-10);
+}
+
+.event-price {
+  font-size: 1.25rem;
+  font-weight: 700;
+  background: linear-gradient(to right, var(--pink-400), var(--orange-400));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.event-btn {
+  background: linear-gradient(to right, var(--pink-500), var(--orange-500));
+  color: var(--white);
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: brightness 0.3s;
+}
+
+.event-btn:hover {
+  filter: brightness(1.1);
+}
+
+/* Trending Section Cards */
+.trending-card {
+  background: var(--white-5);
+  border: 1px solid var(--white-10);
+  border-radius: 1rem;
+  overflow: hidden;
+  transition: all 0.3s;
+  display: flex;
+  height: 200px;
+}
+
+.trending-card:hover {
+  border-color: var(--white-20);
+  background: var(--white-10);
+  transform: translateX(4px);
+}
+
+.trending-card img {
+  width: 40%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.trending-card-content {
+  padding: 1.5rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.trending-card-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+}
+
+.trending-badge {
+  display: inline-block;
+  background: rgba(255, 107, 107, 0.2);
+  color: #ff6b6b;
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  width: fit-content;
+  margin-bottom: 0.5rem;
+}
+
+/* Category Buttons */
+.category-btn {
+  background: var(--white-5);
+  border: 1px solid var(--white-10);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  text-align: left;
+  font-size: 0.875rem;
+  transition: all 0.3s;
+  cursor: pointer;
+  color: var(--white);
+}
+
+.category-btn:hover {
+  border-color: var(--white-20);
+  color: var(--white);
+}
+
+/* Utilities */
+.w-full {
+  width: 100%;
+}
+
+.w-8 {
+  width: 2rem;
+}
+
+.h-8 {
+  height: 2rem;
+}
+
+.h-full {
+  height: 100%;
+}
+
+.max-w-xl {
+  max-width: 36rem;
+}
+
+.max-w-2xl {
+  max-width: 42rem;
+}
+
+.max-w-7xl {
+  max-width: 80rem;
+}
+
+.overflow-hidden {
+  overflow: hidden;
+}
+
+.border {
+  border: 1px solid;
+}
+
+.border-t {
+  border-top: 1px solid;
+}
+
+.border-b {
+  border-bottom: 1px solid;
+}
+
+.border-white\/10 {
+  border-color: var(--white-10);
+}
+
+.border-white\/20 {
+  border-color: var(--white-20);
+}
+
+.rounded-3xl {
+  border-radius: 1.5rem;
+}
+
+.overflow-x-hidden {
+  overflow-x: hidden;
+}
+
+.relative {
+  position: relative;
+}
+
+.absolute {
+  position: absolute;
+}
+
+.inset-0 {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+.opacity-0 {
+  opacity: 0;
+}
+
+.opacity-100 {
+  opacity: 1;
+}
+
+.transition-opacity {
+  transition: opacity 0.3s;
+}
+
+.transition-all {
+  transition: all 0.3s;
+}
+
+.hover\:scale-105:hover {
+  transform: scale(1.05);
+}
+
+.hover\:brightness-110:hover {
+  filter: brightness(1.1);
+}
+
+.z-10 {
+  z-index: 10;
+}
+
+.space-y-2 > * + * {
+  margin-top: 0.5rem;
+}
+
+.space-y-4 > * + * {
+  margin-top: 1rem;
+}
+
+/* Specific positioning */
+.pt-6 {
+  padding-top: 1.5rem;
+}
+
+.flex-1 {
+  flex: 1;
+}
+
+.flex-shrink-0 {
+  flex-shrink: 0;
+}
+
+.outline-none {
+  outline: none;
+}
+
+.focus\:border-white\/40:focus {
+  border-color: var(--white-40);
+}
+
+/* Landing Page: Hero */
+.landing-hero {
+  position: relative;
+  padding: 48px 0;
+  background:
+    radial-gradient(1200px 600px at 10% 0%, rgba(34, 211, 238, 0.15), transparent),
+    radial-gradient(1200px 600px at 90% 0%, rgba(167, 139, 250, 0.15), transparent);
+}
+
+.landing-hero-title {
+  font-size: 2.375rem; /* 38px */
+  font-weight: 800;
+  line-height: 1.1;
+  margin: 0;
+}
+
+.landing-hero-title.gradient {
+  background-image: linear-gradient(90deg, var(--cyan-400, #22d3ee), var(--purple-400, #c084fc));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.landing-hero-subtitle {
+  color: var(--white-70);
+  margin-top: 12px;
+}
+
+/* Landing Page: Search Bar */
+.landing-search {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 18px;
+  width: 100%;
+}
+
+.landing-search-form {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  max-width: 700px;
+}
+
+.landing-search-input {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--white-10);
+  background: var(--white-5);
+  color: var(--white);
+}
+
+.landing-search-input::placeholder {
+  color: var(--white-50);
+}
+
+.landing-search-input:focus {
+  outline: none;
+  border-color: var(--white-20);
+}
+
+/* Landing Page: Buttons */
+.u-btn-primary {
+  background: linear-gradient(to right, var(--pink-500), var(--orange-500));
+  color: var(--white);
+  padding: 0.75rem 1.25rem;
+  border-radius: 0.75rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: filter 0.2s ease, transform 0.2s ease;
+}
+
+.u-btn-primary:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+.u-btn-secondary {
+  background: var(--white-5);
+  color: var(--white);
+  padding: 0.75rem 1.25rem;
+  border-radius: 0.75rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border: 1px solid var(--white-10);
+  cursor: pointer;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.u-btn-secondary:hover {
+  border-color: var(--white-20);
+  transform: translateY(-1px);
+}
+
+/* Landing Page: Chips */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0.5rem 0.9rem;
+  border-radius: 999px;
+  background: var(--white-5);
+  border: 1px solid var(--white-10);
+  color: var(--white);
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.chip:hover {
+  border-color: var(--white-20);
+  transform: translateY(-1px);
+}
+
+/* Landing Page: Features */
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.feature-card {
+  background: var(--white-5);
+  border: 1px solid var(--white-10);
+  border-radius: 1rem;
+  padding: 16px;
+  transition: all 0.2s ease;
+}
+
+.feature-card:hover {
+  border-color: var(--white-20);
+  background: var(--white-10);
+  transform: translateY(-2px);
+}
+
+/* Utilities untuk landing */
+.mt-4 { margin-top: 1rem; }
+.mt-6 { margin-top: 1.5rem; }
+.mt-8 { margin-top: 2rem; }
+
+@media (max-width: 768px) {
+  .feature-grid {
+    grid-template-columns: 1fr;
+  }
+  .landing-hero-title {
+    font-size: 1.875rem; /* 30px */
+  }
+}
+
+/* Fallback utilities for Tailwind-like classes */
+.text-white { color: #ffffff; }
+.text-white\/70 { color: rgba(255,255,255,0.7); }
+.text-transparent { color: transparent; }
+.bg-clip-text { -webkit-background-clip: text; background-clip: text; }
+.overflow-x-hidden { overflow-x: hidden; }
+.pt-12 { padding-top: 3rem; }
+.pb-24 { padding-bottom: 6rem; }
+.grid { display: grid; }
+.grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.gap-6 { gap: 1.5rem; }
+
+/* Gradient text helper to replace multiple Tailwind classes */
+.gradient-text {
+  background-image: linear-gradient(90deg, var(--pink-400), var(--red-400), var(--orange-400));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  display: inline-block;
 }

@@ -6,21 +6,16 @@
 @section('content')
 <section class="pt-12 pb-24 overflow-x-hidden">
     <div class="container mx-auto text-center space-y-4">
-        <h1 class="text-5xl sm:text-5xl font-extrabold tracking-tight text-white">
-            Discover Amazing
-            <span class="bg-gradient-to-r from-pink-400 via-red-400 to-orange-400 bg-clip-text text-transparent">
-                Events Near You
-            </span>
+        <h1 class="text-5xl font-extrabold tracking-tight text-white">
+            Discover Amazing <span class="gradient-text">Events Near You</span>
         </h1>
         <p class="text-white/70 text-base">
             Find and book tickets to concerts, conferences, festivals, sports events, and more.<br>
             Don't miss out on unforgettable experiences.
         </p>
-
         <div class="flex justify-center mt-6">
             <form method="GET" action="{{ route('user.events.index') }}" class="landing-search-form">
-                <input type="text" name="q" placeholder="Search events, location..."
-                       class="landing-search-input max-w-xl" />
+                <input type="text" name="q" placeholder="Search events, location..." class="landing-search-input" />
                 <button type="submit" class="u-btn-primary text-sm">Search</button>
             </form>
         </div>

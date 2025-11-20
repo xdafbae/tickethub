@@ -2,18 +2,6 @@
 
 return [
 
-    /*
-    |--------------------------------------------------------------------------
-    | Third Party Services
-    |--------------------------------------------------------------------------
-    |
-    | This file is for storing the credentials for third party services such
-    | as Mailgun, Postmark, AWS and more. This file provides the de facto
-    | location for this type of information, allowing packages to have
-    | a conventional file to locate the various service credentials.
-    |
-    */
-
     'mailgun' => [
         'domain' => env('MAILGUN_DOMAIN'),
         'secret' => env('MAILGUN_SECRET'),
@@ -31,4 +19,14 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'midtrans' => [
+        'server_key' => env('MIDTRANS_SERVER_KEY', ''),
+        'client_key' => env('MIDTRANS_CLIENT_KEY', ''),
+        'is_production' => (bool)env('MIDTRANS_IS_PRODUCTION', false),
+        'preferred_va' => env('MIDTRANS_PREFERRED_VA', 'permata'),
+        'enabled_channels' => array_filter(array_map('trim', explode(',', env(
+            'MIDTRANS_ENABLED_CHANNELS',
+            'permata_va,gopay,qris,shopeepay,bri_va,bni_va,bca_va'
+        )))),
+    ],
 ];

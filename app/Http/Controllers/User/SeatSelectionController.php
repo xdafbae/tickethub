@@ -7,6 +7,7 @@ use App\Models\Event;
 use App\Models\SeatMap;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redis;
+use App\Models\Order; // Tambah: untuk cek kursi yang sudah dibayar
 
 class SeatSelectionController extends Controller
 {
@@ -26,6 +27,10 @@ class SeatSelectionController extends Controller
         $sessionId = $request->session()->getId();
         $nodes = [];
         $locks = [];
+
+        // Ambil kursi yang sudah paid dan yang masih booked (pending)
+        $paidSeats = $this->getTakenSeats($event);
+        $bookedSeats = $this->getBookedSeats($event);
 
         foreach ($layout as $n) {
             $id = $n['id'] ?? null;
@@ -47,7 +52,7 @@ class SeatSelectionController extends Controller
                 'h' => (int)($n['h'] ?? 80),
                 'ticket_type_id' => $ticketTypeId,
                 'ticket_type_name' => $ticketTypeId ? ($typeNames[$ticketTypeId] ?? null) : null,
-                'disabled' => (bool)($n['disabled'] ?? false),
+                'disabled' => (bool)($n['disabled'] ?? false) || ($id && (in_array($id, $paidSeats, true) || in_array($id, $bookedSeats, true))),
             ];
 
             // Tambah nama tampilan untuk kursi builder
@@ -105,7 +110,7 @@ class SeatSelectionController extends Controller
                             'h' => $seatSize,
                             'ticket_type_id' => $ticketTypeId,
                             'ticket_type_name' => $ticketTypeId ? ($typeNames[$ticketTypeId] ?? null) : null,
-                            'disabled' => (bool)($n['disabled'] ?? false),
+                            'disabled' => (bool)($n['disabled'] ?? false) || in_array($seatId, $paidSeats, true) || in_array($seatId, $bookedSeats, true),
                         ];
 
                         $key = self::lockKey($event->id, $seatId);
@@ -143,7 +148,16 @@ class SeatSelectionController extends Controller
         $locked = [];
         $failed = [];
 
+        // Tolak kursi yang sudah paid atau sudah dibooking (pending)
+        $paidSeats = $this->getTakenSeats($event);
+        $bookedSeats = $this->getBookedSeats($event);
+
         foreach ($seats as $seatId) {
+            if (in_array($seatId, $paidSeats, true) || in_array($seatId, $bookedSeats, true)) {
+                $failed[] = $seatId;
+                continue;
+            }
+
             $key = self::lockKey($event->id, $seatId);
             try {
                 $current = Redis::get($key);
@@ -232,5 +246,27 @@ class SeatSelectionController extends Controller
     private static function lockKey(int $eventId, string $seatId): string
     {
         return "seat_lock:{$eventId}:{$seatId}";
+    }
+
+    // Kursi terjual (paid)
+    private function getTakenSeats(Event $event): array
+    {
+        $raw = Order::where('event_id', $event->id)
+            ->where('status', 'paid')
+            ->pluck('seats')
+            ->all();
+
+        return collect($raw)->flatten()->filter()->map(fn($s) => (string)$s)->unique()->values()->all();
+    }
+
+    // Kursi yang sudah dipesan (order pending)
+    private function getBookedSeats(Event $event): array
+    {
+        $raw = Order::where('event_id', $event->id)
+            ->where('status', 'pending')
+            ->pluck('seats')
+            ->all();
+
+        return collect($raw)->flatten()->filter()->map(fn($s) => (string)$s)->unique()->values()->all();
     }
 }

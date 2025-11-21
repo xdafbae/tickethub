@@ -4,7 +4,7 @@
 @section('page-title', 'Status Pembayaran')
 
 @section('content')
-<div class="container" style="max-width: 900px; margin: 0 auto; padding: 16px;">
+<div class="container" style="max-width: 900px; margin: 0 auto; padding: 16px; color:#e2e8f0;">
     @if(session('status'))
         <div class="status-banner status-paid">
             {{ session('status') }}
@@ -57,13 +57,13 @@
                     <div class="info-label">Status Order</div>
                     <div class="info-value">
                         @if($order->status === 'paid')
-                            <span class="chip" style="background:#22c55e;color:#fff;">Berhasil</span>
+                            <span class="chip" style="background:#d1fae5;color:#065f46;">Berhasil</span>
                         @elseif($order->status === 'failed')
-                            <span class="chip" style="background:#ef4444;color:#fff;">Gagal</span>
+                            <span class="chip" style="background:#fee2e2;color:#991b1b;">Gagal</span>
                         @elseif($order->status === 'expired')
-                            <span class="chip" style="background:#f59e0b;color:#fff;">Kedaluwarsa</span>
+                            <span class="chip" style="background:#fef3c7;color:#92400e;">Kedaluwarsa</span>
                         @else
-                            <span class="chip" style="background:#3b82f6;color:#fff;">Menunggu Pembayaran</span>
+                            <span class="chip" style="background:#dbeafe;color:#1e3a8a;">Menunggu Pembayaran</span>
                         @endif
                     </div>
                 </div>
@@ -95,6 +95,10 @@
 
                 @if(($order->status === 'pending') && $payment && $payment->redirect_url)
                     <a href="{{ $payment->redirect_url }}" class="btn btn-success">Lanjutkan Pembayaran</a>
+                @endif
+
+                @if($order->status === 'paid')
+                    <a href="{{ route('user.orders.ticket.download', ['order' => $order->id]) }}?refresh=1" class="btn btn-success">Download Tiket</a>
                 @endif
             </div>
 

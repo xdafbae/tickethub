@@ -436,19 +436,32 @@ class CartController extends Controller
         $mySeats = [];
         $seatNamesById = [];
         $seatLocks = [];
-    
+
+        // Kursi paid & booked (pending)
+        $paidSeats = collect(
+            \App\Models\Order::where('event_id', $event->id)->where('status', 'paid')->pluck('seats')->all()
+        )->flatten()->filter()->map(fn($s) => (string)$s)->unique()->values()->all();
+        $bookedSeats = collect(
+            \App\Models\Order::where('event_id', $event->id)->where('status', 'pending')->pluck('seats')->all()
+        )->flatten()->filter()->map(fn($s) => (string)$s)->unique()->values()->all();
+
         if ($seatMap && is_array($seatMap->layout)) {
             foreach ($seatMap->layout as $n) {
                 $type = $n['type'] ?? null;
                 $id = $n['id'] ?? null;
                 if (!$id) continue;
-    
+
                 if ($type === 'chair') {
                     $key = "seat_lock:{$event->id}:{$id}";
                     try { $val = Redis::get($key); } catch (\Throwable $e) { $val = null; }
                     if ($val !== null) {
                         $seatLocks[$id] = ['by_me' => ($val === $sessionId), 'by' => $val];
                         if ($val === $sessionId) { $mySeats[] = $id; }
+                    }
+                    if (in_array($id, $paidSeats, true)) {
+                        $seatLocks[$id] = ['by_me' => false, 'by' => 'PAID'];
+                    } elseif (in_array($id, $bookedSeats, true)) {
+                        $seatLocks[$id] = ['by_me' => false, 'by' => 'BOOKED'];
                     }
                     $seatNamesById[$id] = ($n['display_name'] ?? ($n['label'] ?? 'Kursi'));
                 } elseif (is_string($type) && str_starts_with($type, 'table')) {
@@ -462,12 +475,17 @@ class CartController extends Controller
                             $seatLocks[$seatId] = ['by_me' => ($val === $sessionId), 'by' => $val];
                             if ($val === $sessionId) { $mySeats[] = $seatId; }
                         }
+                        if (in_array($seatId, $paidSeats, true)) {
+                            $seatLocks[$seatId] = ['by_me' => false, 'by' => 'PAID'];
+                        } elseif (in_array($seatId, $bookedSeats, true)) {
+                            $seatLocks[$seatId] = ['by_me' => false, 'by' => 'BOOKED'];
+                        }
                         $seatNamesById[$seatId] = "{$baseName} - {$idx}";
                     }
                 }
             }
         }
-    
+
         // Fallback: tambahkan lock dari session jika Redis tidak aktif
         $sessionSeats = (array)$request->session()->get('fallback_locked_seats:' . $event->id, []);
         foreach ($sessionSeats as $sid) {
@@ -476,7 +494,7 @@ class CartController extends Controller
             }
             if (!in_array($sid, $mySeats, true)) { $mySeats[] = $sid; }
         }
-    
+
         return [$mySeats, $seatNamesById, $seatLocks];
     }
 
@@ -590,9 +608,98 @@ class CartController extends Controller
             }
             $order->update(['status' => $targetOrderStatus]);
 
+            // Jika sudah paid, kirim e‑ticket via job
+            if ($targetOrderStatus === 'paid') {
+                dispatch(new \App\Jobs\SendOrderEmail($order->id));
+            }
+
             return back()->with('status', 'Status diperbarui: ' . $targetOrderStatus);
         } catch (\Throwable $e) {
             return back()->withErrors(['status' => 'Error: ' . $e->getMessage()]);
         }
+    }
+
+    public function downloadTicket(\App\Models\Order $order)
+    {
+        if ($order->status !== 'paid') {
+            return back()->withErrors(['status' => 'Tiket hanya tersedia setelah pembayaran berhasil.']);
+        }
+
+        $ticketRel = 'tickets/e-ticket-order-' . $order->id . '.pdf';
+        $disk = \Illuminate\Support\Facades\Storage::disk('public');
+        $forceRefresh = request()->boolean('refresh'); // pindah ke atas dan dipakai di kondisi
+    
+        if ($forceRefresh || !$disk->exists($ticketRel)) {
+            $secret = (string)env('E_TICKET_SECRET', '');
+            $payload = [
+                'order_id'     => $order->id,
+                'user_id'      => $order->user_id,
+                'external_ref' => $order->external_ref,
+                'issued_at'    => now()->toIso8601String(),
+            ];
+            $payloadJson = json_encode($payload, JSON_UNESCAPED_SLASHES);
+            $signature   = $secret !== '' ? hash_hmac('sha256', (string)$payloadJson, $secret) : '';
+    
+            $qrSvg = null;
+            $qrDataUri = null;
+            try {
+                // Utama: hasilkan PNG untuk kompatibilitas DomPDF
+                $qrPng = \Endroid\QrCode\Builder\Builder::create()
+                    ->writer(new \Endroid\QrCode\Writer\PngWriter())
+                    ->data((string)json_encode(['v'=>1,'d'=>$payload,'sig'=>$signature], JSON_UNESCAPED_SLASHES))
+                    ->encoding(new \Endroid\QrCode\Encoding\Encoding('UTF-8'))
+                    ->errorCorrectionLevel(new \Endroid\QrCode\ErrorCorrectionLevel\ErrorCorrectionLevelHigh())
+                    ->size(220)
+                    ->margin(10)
+                    ->build();
+                $qrPngBinary = $qrPng->getString();
+                $qrDataUri = 'data:image/png;base64,' . base64_encode($qrPngBinary);
+
+                // Simpan PNG ke storage dan buat path absolut untuk DomPDF
+                $qrPngRel = 'tickets/qr-order-' . $order->id . '.png';
+                $disk->put($qrPngRel, $qrPngBinary);
+                $qrPngPath = storage_path('app/public/' . $qrPngRel);
+
+                // Opsional: juga siapkan SVG untuk tampilan HTML biasa (bukan PDF)
+                $qrSvgObj = \Endroid\QrCode\Builder\Builder::create()
+                    ->writer(new \Endroid\QrCode\Writer\SvgWriter())
+                    ->data((string)json_encode(['v'=>1,'d'=>$payload,'sig'=>$signature], JSON_UNESCAPED_SLASHES))
+                    ->encoding(new \Endroid\QrCode\Encoding\Encoding('UTF-8'))
+                    ->errorCorrectionLevel(new \Endroid\QrCode\ErrorCorrectionLevel\ErrorCorrectionLevelHigh())
+                    ->size(220)
+                    ->margin(10)
+                    ->build();
+                $qrSvg = $qrSvgObj->getString();
+                if (is_string($qrSvg)) {
+                    if (!str_contains($qrSvg, 'width=') && !str_contains($qrSvg, 'height=')) {
+                        $qrSvg = preg_replace('/<svg\b([^>]*)>/', '<svg $1 width="220" height="220">', $qrSvg, 1);
+                    }
+                    if (!str_contains($qrSvg, 'xmlns=')) {
+                        $qrSvg = preg_replace('/<svg\b([^>]*)>/', '<svg $1 xmlns="http://www.w3.org/2000/svg">', $qrSvg, 1);
+                    }
+                    if (!str_contains($qrSvg, 'viewBox=')) {
+                        $qrSvg = preg_replace('/<svg\b([^>]*)>/', '<svg $1 viewBox="0 0 220 220">', $qrSvg, 1);
+                    }
+                }
+            } catch (\Throwable $e) {
+                \Log::warning('QR generation failed (downloadTicket)', ['error' => $e->getMessage()]);
+            }
+    
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('user.tickets.e_ticket', [
+                'order'     => $order,
+                'event'     => $order->event,
+                'buyerName' => $order->buyer_name,
+                'qrPngPath' => $qrPngPath ?? null,
+                'qrSvg' => $qrSvg,
+                'qrDataUri' => $qrDataUri,
+                'signature' => $signature,
+                'issuedAt'  => now(),
+            ]);
+    
+            $disk->put($ticketRel, $pdf->output());
+        }
+    
+        $path = $disk->path($ticketRel);
+        return response()->download($path, 'e-ticket-order-' . $order->id . '.pdf');
     }
 }

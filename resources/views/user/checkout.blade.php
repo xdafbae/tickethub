@@ -25,31 +25,61 @@
                     </div>
                 @endif 
                 @if($errors->any())
-                    <div style="background:#fdecea;border:1px solid #f5c6cb;padding:10px 12px;border-radius:8px;margin-bottom:12px;">
-                        {{ implode(' ', $errors->all()) }}
+                    <div style="background:#2b0d0d;border:1px solid #ef4444;padding:12px 14px;border-radius:8px;margin-bottom:12px;color:#fecaca;">
+                        <strong>Periksa kembali data pembeli:</strong>
+                        <ul style="margin:6px 0 0 18px; padding:0;">
+                            @foreach($errors->all() as $err)
+                                <li>{{ $err }}</li>
+                            @endforeach
+                        </ul>
                     </div>
                 @endif
 
                 <!-- Grid utama: kiri Data Pembeli, kanan Ringkasan Order -->
                 <div style="display:grid; grid-template-columns: 1.5fr 1fr; gap: 20px;">
-                    <div class="table-card" style="margin:0;">
+                    <div style="margin:0; padding:0; background:transparent; border:none; box-shadow:none;">
                         <h3 style="margin: 0 0 8px; font-size: 16px;">Data Pembeli</h3>
                         <div style="display:grid; grid-template-columns: 1fr; gap: 10px;">
                             <div>
                                 <label style="display:block; font-size:12px; color: var(--admin-muted);">Nama</label>
-                                <input type="text" name="buyer[name]" value="{{ old('buyer.name', $cart['buyer']['name'] ?? '') }}" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--admin-border); background:#0f0f10; color:#fff;" required>
+                                <input
+                                    type="text"
+                                    name="buyer[name]"
+                                    value="{{ old('buyer.name', $cart['buyer']['name'] ?? '') }}"
+                                    style="width:100%; padding:10px; border-radius:8px; border:1px solid {{ $errors->has('buyer.name') ? '#ef4444' : 'var(--admin-border)' }}; background:#0f0f10; color:#fff; {{ $errors->has('buyer.name') ? 'box-shadow:0 0 0 2px rgba(239,68,68,.25);' : '' }}"
+                                    required
+                                >
+                                @error('buyer.name')
+                                    <div style="margin-top:6px; font-size:12px; color:#ef4444; background: rgba(239,68,68,.12); padding:6px 8px; border-radius:6px;">{{ $message }}</div>
+                                @enderror
                             </div>
                             <div>
                                 <label style="display:block; font-size:12px; color: var(--admin-muted);">Email</label>
-                                <input type="email" name="buyer[email]" value="{{ old('buyer.email', $cart['buyer']['email'] ?? '') }}" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--admin-border); background:#0f0f10; color:#fff;" required>
+                                <input
+                                    type="email"
+                                    name="buyer[email]"
+                                    value="{{ old('buyer.email', $cart['buyer']['email'] ?? '') }}"
+                                    style="width:100%; padding:10px; border-radius:8px; border:1px solid {{ $errors->has('buyer.email') ? '#ef4444' : 'var(--admin-border)' }}; background:#0f0f10; color:#fff; {{ $errors->has('buyer.email') ? 'box-shadow:0 0 0 2px rgba(239,68,68,.25);' : '' }}"
+                                    required
+                                >
+                                @error('buyer.email')
+                                    <div style="margin-top:6px; font-size:12px; color:#ef4444; background: rgba(239,68,68,.12); padding:6px 8px; border-radius:6px;">{{ $message }}</div>
+                                @enderror
                             </div>
                             <div>
                                 <label style="display:block; font-size:12px; color: var(--admin-muted);">Telepon</label>
-                                <input type="text" name="buyer[phone]" value="{{ old('buyer.phone', $cart['buyer']['phone'] ?? '') }}" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--admin-border); background:#0f0f10; color:#fff;">
+                                <input
+                                    type="text"
+                                    name="buyer[phone]"
+                                    value="{{ old('buyer.phone', $cart['buyer']['phone'] ?? '') }}"
+                                    style="width:100%; padding:10px; border-radius:8px; border:1px solid {{ $errors->has('buyer.phone') ? '#ef4444' : 'var(--admin-border)' }}; background:#0f0f10; color:#fff; {{ $errors->has('buyer.phone') ? 'box-shadow:0 0 0 2px rgba(239,68,68,.25);' : '' }}"
+                                >
+                                @error('buyer.phone')
+                                    <div style="margin-top:6px; font-size:12px; color:#ef4444; background: rgba(239,68,68,.12); padding:6px 8px; border-radius:6px;">{{ $message }}</div>
+                                @enderror
                             </div>
                         </div>
                     </div>
-
                     <div class="table-card" style="margin:0;">
                         <div class="table-header"><h3>Ringkasan Order</h3></div>
                         <div style="padding: 20px;">

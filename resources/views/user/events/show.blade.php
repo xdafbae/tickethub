@@ -113,6 +113,14 @@
                     {{-- Seat Selection: semua kontrol berada di dalam kotak --}}
                     <div style="margin-top:20px;">
                         <h3 style="margin:0 0 8px; font-size:16px;">Seat Selection</h3>
+
+                        @guest
+                        <div style="margin-bottom:10px; background:#2b0d0d; border:1px solid #ef4444; color:#fecaca; padding:10px 12px; border-radius:8px;">
+                            Anda harus login untuk memilih kursi dan melakukan pemesanan.
+                            <a href="{{ route('login') }}" class="btn btn-secondary btn-sm" style="margin-left:8px;">Login</a>
+                        </div>
+                        @endguest
+
                         <div id="selectMapContainer"
                             style="position:relative; border:1px solid var(--admin-border); border-radius:10px; background:#0f0f10; height:560px; overflow:auto;">
                             <div style="position:absolute; right:12px; top:12px; display:flex; gap:8px; z-index:10;">
@@ -141,16 +149,24 @@
                                     <span id="selectedTotal">Rp 0</span>
                                 </div>
                             </div>
+                            @auth
                             <div style="display:flex; gap:8px;">
                                 <button id="lockSeats" class="btn btn-primary btn-sm">Lock Selected</button>
                                 <button id="unlockSeats" class="btn btn-outline btn-sm">Unlock</button>
                             </div>
+                            @else
+                            <div style="display:flex; gap:8px; align-items:center;">
+                                <span style="color:#fca5a5; font-size:12px;">Login untuk mengunci kursi.</span>
+                                <a href="{{ route('login') }}" class="btn btn-secondary btn-sm">Login</a>
+                            </div>
+                            @endauth
                         </div>
                     </div>
 
                     <script>
                         (function() {
                             var eventId = {{ $event->id }};
+                            var isGuest = {{ Auth::check() ? 'false' : 'true' }};
                             // harga per ticket type (ID dan nama)
                             var priceByTypeId = @json($event->ticketTypes()->pluck('price', 'id')->all());
                             var priceByTypeName = @json($event->ticketTypes()->pluck('price', 'name')->all());
@@ -199,9 +215,12 @@
                             }
 
                             function colorFor(n) {
-                                if (n.disabled) return '#fca5a5';
-                                if (n.locked_by_me) return '#22c55e';
-                                if (n.locked) return '#ef4444';
+                                // Tampilkan warna berbeda untuk status kursi
+                                if (n.locked_by === 'PAID') return '#ef4444';     // terjual (merah)
+                                if (n.locked_by === 'BOOKED') return '#f59e0b';   // dibooking (oranye)
+                                if (n.disabled) return '#fca5a5';                 // dinonaktifkan oleh admin (pink)
+                                if (n.locked_by_me) return '#22c55e';             // dikunci oleh saya (hijau)
+                                if (n.locked) return '#ef4444';                   // dikunci sementara oleh orang lain
                                 var t = n.ticket_type_name || '';
                                 if (t === 'VIP') return '#ef4444';
                                 if (t === 'Gold') return '#f59e0b';
@@ -278,14 +297,30 @@
                                     c.setAttribute('fill', colorFor(n));
                                     c.setAttribute('stroke', selected.has(n.id) ? '#22c55e' : '#334155');
                                     c.setAttribute('data-id', n.id);
-                                    c.style.cursor = (n.locked && !n.locked_by_me) ? 'not-allowed' : 'pointer';
+                                    // Kursi unavailable tidak bisa diklik
+                                    c.style.cursor = (n.disabled || (n.locked && !n.locked_by_me)) ? 'not-allowed' : 'pointer';
                                     nameById[n.id] = n.display_name || (n.label || 'Kursi');
                                     typeIdBySeatId[n.id] = n.ticket_type_id || null;
                                     typeNameBySeatId[n.id] = n.ticket_type_name || null;
 
+                                    // Tooltip status
+                                    var statusLabel = null;
+                                    if (n.locked_by === 'PAID') statusLabel = 'Terjual';
+                                    else if (n.locked_by === 'BOOKED') statusLabel = 'Sudah dibooking';
+                                    else if (n.locked && !n.locked_by_me) statusLabel = 'Dikunci orang lain';
+                                    else if (n.locked_by_me) statusLabel = 'Dikunci oleh Anda';
+                                    else if (n.disabled) statusLabel = 'Kursi dinonaktifkan';
+
+                                    if (statusLabel) {
+                                        var tt = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+                                        tt.textContent = statusLabel;
+                                        c.appendChild(tt);
+                                    }
+
                                     c.addEventListener('click', function(e) {
+                                        // Blok klik untuk kursi unavailable
+                                        if (n.disabled || (n.locked && !n.locked_by_me)) return;
                                         var id = e.target.getAttribute('data-id');
-                                        if (n.locked && !n.locked_by_me) return;
                                         if (selected.has(id)) selected.delete(id);
                                         else selected.add(id);
                                         updateSelectedList();
@@ -311,6 +346,8 @@
                                             var lockedBy = locks[n.id];
                                             n.locked_by_me = !!(lockedBy && lockedBy.by_me);
                                             n.locked = !!lockedBy && !lockedBy.by_me;
+                                            // Tambah: alasan lock untuk pewarnaan/tooltip (PAID/BOOKED)
+                                            n.locked_by = lockedBy ? (lockedBy.by || null) : null;
                                             return n;
                                         });
                                         draw(layout);
@@ -402,7 +439,12 @@
                             });
 
                             // Lock / Unlock
-                            document.getElementById('lockSeats').addEventListener('click', function() {
+                            document.getElementById('lockSeats')?.addEventListener('click', function() {
+                                if (isGuest) {
+                                    alert('Silakan login terlebih dahulu untuk mengunci kursi.');
+                                    window.location.href = "{{ route('login') }}";
+                                    return;
+                                }
                                 var seats = Array.from(selected);
                                 if (!seats.length) return;
                                 fetch('{{ route('user.events.seat.lock', $event) }}', {
@@ -412,17 +454,15 @@
                                         'X-Requested-With': 'XMLHttpRequest',
                                         'X-CSRF-TOKEN': '{{ csrf_token() }}'
                                     },
-                                    body: JSON.stringify({
-                                        seats: seats,
-                                        ttl: 120
-                                    })
-                                }).then(function(r) {
-                                    return r.json();
-                                }).then(function() {
-                                    fetchMap();
-                                });
+                                    body: JSON.stringify({ seats: seats, ttl: 120 })
+                                }).then(function(r){ return r.json(); }).then(function(){ fetchMap(); });
                             });
-                            document.getElementById('unlockSeats').addEventListener('click', function() {
+                            document.getElementById('unlockSeats')?.addEventListener('click', function() {
+                                if (isGuest) {
+                                    alert('Silakan login terlebih dahulu untuk membuka kunci kursi.');
+                                    window.location.href = "{{ route('login') }}";
+                                    return;
+                                }
                                 var seats = Array.from(selected);
                                 if (!seats.length) return;
                                 fetch('{{ route('user.events.seat.unlock', $event) }}', {
@@ -432,15 +472,9 @@
                                         'X-Requested-With': 'XMLHttpRequest',
                                         'X-CSRF-TOKEN': '{{ csrf_token() }}'
                                     },
-                                    body: JSON.stringify({
-                                        seats: seats
-                                    })
-                                }).then(function(r) {
-                                    return r.json();
-                                }).then(function() {
-                                    selected.clear();
-                                    updateSelectedList();
-                                    fetchMap();
+                                    body: JSON.stringify({ seats: seats })
+                                }).then(function(r){ return r.json(); }).then(function(){
+                                    selected.clear(); updateSelectedList(); fetchMap();
                                 });
                             });
 
@@ -450,37 +484,35 @@
                             // Event delegation yang benar untuk tombol "Pesan Tiket"
                             document.addEventListener('click', function(e) {
                                 if (e.target && e.target.id === 'goCheckout') {
-                                    var seats = Array.from(selected);
-                                    if (!seats.length) {
-                                        alert('Pilih kursi terlebih dahulu.');
+                                    if (isGuest) {
+                                        alert('Silakan login terlebih dahulu untuk memesan tiket.');
+                                        window.location.href = "{{ route('login') }}";
                                         return;
                                     }
+                                    var seats = Array.from(selected);
+                                    if (!seats.length) { alert('Pilih kursi terlebih dahulu.'); return; }
                                     fetch('{{ route('user.events.seat.lock', $event) }}', {
-                                            method: 'POST',
-                                            headers: {
-                                                'Content-Type': 'application/json',
-                                                'X-Requested-With': 'XMLHttpRequest',
-                                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                                            },
-                                            body: JSON.stringify({
-                                                seats: seats,
-                                                ttl: 180
-                                            })
-                                        })
-                                        .then(function() {
-                                            window.location.href =
-                                                "{{ route('user.checkout.show', ['event' => $event->id]) }}";
-                                        })
-                                        .catch(function() {
-                                            alert('Gagal mengunci kursi. Coba lagi.');
-                                        });
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'X-Requested-With': 'XMLHttpRequest',
+                                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                        },
+                                        body: JSON.stringify({ seats: seats, ttl: 180 })
+                                    }).then(function(){ 
+                                        window.location.href = "{{ route('user.checkout.show', ['event' => $event->id]) }}";
+                                    }).catch(function(){ alert('Gagal mengunci kursi. Coba lagi.'); });
                                 }
                             });
                         }());
                     </script>
                     <div style="margin-top:18px; display:flex; gap:8px;">
                         <a href="{{ route('user.events.index') }}" class="btn btn-outline">Kembali ke daftar</a>
+                        @auth
                         <button id="goCheckout" class="btn btn-primary">Pesan Tiket</button>
+                        @else
+                        <a href="{{ route('login') }}" class="btn btn-primary">Login untuk memesan</a>
+                        @endauth
                     </div>
                 </div>
             </div>

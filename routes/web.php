@@ -82,7 +82,11 @@ Route::prefix('events/{event}')->group(function () {
 // Halaman status pembayaran (di luar prefix event agar mudah di-redirect)
 Route::get('/orders/{order}/status', [\App\Http\Controllers\User\CartController::class, 'paymentStatus'])->name('user.payment.status');
 Route::post('/orders/{order}/status/check', [\App\Http\Controllers\User\CartController::class, 'checkPaymentStatus'])->name('user.payment.status.check');
+Route::get('/orders/{order}/ticket', [\App\Http\Controllers\User\CartController::class, 'downloadTicket'])->name('user.orders.ticket.download');
 
 // Webhook endpoints (tanpa CSRF)
 Route::post('/webhooks/midtrans', [WebhookController::class, 'midtrans'])->name('webhooks.midtrans');
+
+// Alias untuk endpoint yang sekarang disetel di Midtrans Dashboard
+Route::post('/payment/success', [WebhookController::class, 'midtrans'])->name('webhooks.midtrans.alias');
 

@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\GateEntryController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
@@ -57,6 +58,9 @@ Route::middleware(['auth','verified','role:admin'])->prefix('admin')->group(func
     Route::get('events/{event}/seat-map', [AdminSeatMapController::class, 'builder'])->name('admin.seat_map.builder');
     Route::post('events/{event}/seat-map', [AdminSeatMapController::class, 'save'])->name('admin.seat_map.save');
     Route::resource('promos', AdminPromoController::class)->names('admin.promos');
+
+    // Tambah: Halaman QR Scanner di admin
+    Route::get('/gate/scanner', [GateEntryController::class, 'scanner'])->name('admin.gate.scanner');
 });
 
 // Hapus proteksi user untuk /events karena sudah publik di atas
@@ -89,4 +93,29 @@ Route::post('/webhooks/midtrans', [WebhookController::class, 'midtrans'])->name(
 
 // Alias untuk endpoint yang sekarang disetel di Midtrans Dashboard
 Route::post('/payment/success', [WebhookController::class, 'midtrans'])->name('webhooks.midtrans.alias');
+
+// Prefix admin: bagi akses antara admin & gate_staff
+Route::prefix('admin')->middleware(['auth','verified'])->group(function () {
+    // Akses bersama: dashboard + gate scanner
+    Route::middleware('role:admin|gate_staff')->group(function () {
+        Route::get('/dashboard', function () { return view('admin.dashboard'); })->name('admin.dashboard');
+        Route::get('/gate/scanner', [GateEntryController::class, 'scanner'])->name('admin.gate.scanner');
+        Route::get('/blank', function () { return view('admin.blank'); })->name('admin.blank');
+    });
+
+    // Khusus admin: menu manajemen
+    Route::middleware('role:admin')->group(function () {
+        Route::resource('events', AdminEventController::class)->names('admin.events');
+        Route::resource('ticket-types', AdminTicketTypeController::class)->names('admin.ticket_types');
+        Route::get('events/{event}/seat-map', [AdminSeatMapController::class, 'builder'])->name('admin.seat_map.builder');
+        Route::post('events/{event}/seat-map', [AdminSeatMapController::class, 'save'])->name('admin.seat_map.save');
+        Route::resource('promos', AdminPromoController::class)->names('admin.promos');
+    });
+});
+
+// Gate Entry (Petugas Pintu) — tetap untuk gate_staff dan admin
+Route::prefix('gate')->middleware(['auth', 'role:gate_staff|admin'])->group(function () {
+    Route::get('/scanner', [GateEntryController::class, 'scanner'])->name('gate.scanner');
+    Route::post('/validate', [GateEntryController::class, 'validateQr'])->name('gate.validate');
+});
 

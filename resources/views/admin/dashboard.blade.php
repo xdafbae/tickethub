@@ -4,7 +4,9 @@
 @section('page-title', 'Dashboard')
 
 @section('header-actions')
+@role('admin')
 <a href="" class="btn btn-primary">+ Tambah Event</a>
+@endrole
 @endsection
 
 @section('content')

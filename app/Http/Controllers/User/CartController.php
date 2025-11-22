@@ -621,6 +621,14 @@ class CartController extends Controller
 
     public function downloadTicket(\App\Models\Order $order)
     {
+        // Tambah: proteksi kepemilikan order
+        if (auth()->check()) {
+            $user = auth()->user();
+            if ($order->user_id !== $user->id && !$user->hasAnyRole(['admin'])) {
+                abort(403);
+            }
+        }
+    
         if ($order->status !== 'paid') {
             return back()->withErrors(['status' => 'Tiket hanya tersedia setelah pembayaran berhasil.']);
         }

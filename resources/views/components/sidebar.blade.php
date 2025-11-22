@@ -58,8 +58,16 @@
         <li>
             <a href="{{ route('admin.orders.index') }}"
                class="{{ request()->routeIs('admin.orders.*') ? 'active' : '' }}">
-                <span class="nav-icon">🧾</span>
-                <span class="nav-label">Orders</span>
+                Orders
+            </a>
+        </li>
+        @endrole
+
+        @role('admin')
+        <li>
+            <a href="{{ route('admin.reports.dashboard') }}"
+               class="{{ request()->routeIs('admin.reports.*') ? 'active' : '' }}">
+                Reporting
             </a>
         </li>
         @endrole

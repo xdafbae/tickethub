@@ -28,5 +28,7 @@ return [
             'MIDTRANS_ENABLED_CHANNELS',
             'permata_va,gopay,qris,shopeepay,bri_va,bni_va,bca_va'
         )))),
+        'verify_ssl' => env('MIDTRANS_VERIFY_SSL', true),
+        'cacert_path' => env('CURL_CA_BUNDLE', storage_path('certs/cacert.pem')),
     ],
 ];

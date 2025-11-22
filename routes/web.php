@@ -17,6 +17,8 @@ use App\Http\Controllers\User\SeatSelectionController;
 use App\Http\Controllers\User\CartController;
 use App\Http\Controllers\Admin\PromoController as AdminPromoController;
 use App\Http\Controllers\WebhookController;
+use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\Admin\DashboardController;
 
 Route::get('/', [LandingController::class, 'index'])->name('landing');
 
@@ -89,6 +91,13 @@ Route::get('/orders/{order}/status', [\App\Http\Controllers\User\CartController:
 Route::post('/orders/{order}/status/check', [\App\Http\Controllers\User\CartController::class, 'checkPaymentStatus'])->name('user.payment.status.check');
 Route::get('/orders/{order}/ticket', [\App\Http\Controllers\User\CartController::class, 'downloadTicket'])->name('user.orders.ticket.download');
 
+// Tambah: Dashboard & Orders (User)
+Route::middleware(['auth','verified'])->group(function () {
+    Route::get('/dashboard', [\App\Http\Controllers\User\DashboardController::class, 'index'])->name('user.dashboard');
+    Route::get('/orders', [\App\Http\Controllers\User\DashboardController::class, 'orders'])->name('user.orders.index');
+    Route::get('/orders/{order}', [\App\Http\Controllers\User\DashboardController::class, 'show'])->name('user.orders.show');
+});
+
 // Webhook endpoints (tanpa CSRF)
 Route::post('/webhooks/midtrans', [WebhookController::class, 'midtrans'])->name('webhooks.midtrans');
 
@@ -105,7 +114,7 @@ Route::prefix('admin')->middleware(['auth','verified'])->group(function () {
     });
 
     // Khusus admin: menu manajemen
-    Route::middleware('role:admin')->group(function () {
+    Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('events', AdminEventController::class)->names('admin.events');
         Route::resource('ticket-types', AdminTicketTypeController::class)->names('admin.ticket_types');
         Route::get('events/{event}/seat-map', [AdminSeatMapController::class, 'builder'])->name('admin.seat_map.builder');
@@ -120,6 +129,18 @@ Route::prefix('admin')->middleware(['auth','verified'])->group(function () {
             ->name('admin.orders.status');
         Route::post('orders/{order}/refund', [AdminOrderController::class, 'refund'])
             ->name('admin.orders.refund');
+    });
+    // Admin area (dashboard accessible to admin & gate_staff)
+    Route::prefix('admin')->name('admin.')->group(function () {
+        // Dashboard untuk admin & gate_staff
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+        // Export (khusus admin)
+        Route::middleware(['role:admin'])->group(function () {
+            Route::get('/dashboard/export/{format}', [DashboardController::class, 'export'])->name('dashboard.export');
+        });
+        Route::get('/reports', [ReportController::class, 'dashboard'])->name('reports.dashboard');
+        Route::get('/reports/export/{format}', [ReportController::class, 'export'])->name('reports.export');
     });
 });
 

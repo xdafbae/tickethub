@@ -1,13 +1,4 @@
-@extends('layouts.app')
-
-@section('title', 'Dashboard')
-@section('page-title', 'Dashboard')
-
-@section('header-actions')
-@role('admin')
-<a href="" class="btn btn-primary">+ Tambah Event</a>
-@endrole
-@endsection
+@extends('layouts.admin')
 
 @section('content')
 @role('admin')
@@ -16,67 +7,48 @@
         <h3>Dashboard Admin & Reporting</h3>
         <div style="display:flex; gap:8px;">
             <a class="btn btn-secondary btn-sm"
-               href="{{ route('admin.dashboard.export', [
-                    'format'   => 'csv',
-                    'from'     => request('from', now()->subDays(30)->format('Y-m-d')),
-                    'to'       => request('to', now()->format('Y-m-d')),
-                    'event_id' => request('event_id')
-               ]) }}">Export CSV</a>
+               href="{{ route('admin.reports.export', ['format' => 'csv', 'from' => $from->format('Y-m-d'), 'to' => $to->format('Y-m-d'), 'event_id' => $eventId]) }}">Export CSV</a>
             <a class="btn btn-secondary btn-sm"
-               href="{{ route('admin.dashboard.export', [
-                    'format'   => 'xls',
-                    'from'     => request('from', now()->subDays(30)->format('Y-m-d')),
-                    'to'       => request('to', now()->format('Y-m-d')),
-                    'event_id' => request('event_id')
-               ]) }}">Export XLS</a>
+               href="{{ route('admin.reports.export', ['format' => 'xls', 'from' => $from->format('Y-m-d'), 'to' => $to->format('Y-m-d'), 'event_id' => $eventId]) }}">Export XLS</a>
         </div>
     </div>
 
-    <form method="GET" action="{{ route('admin.dashboard') }}" style="display:grid; grid-template-columns: repeat(4,1fr); gap:12px;">
+    <form method="GET" action="{{ route('admin.reports.dashboard') }}" style="display:grid; grid-template-columns: repeat(4,1fr); gap:12px;">
         <div>
             <label class="form-label">Dari</label>
-            <input type="date" name="from"
-                   value="{{ request('from', now()->subDays(30)->format('Y-m-d')) }}"
-                   class="form-input">
+            <input type="date" name="from" value="{{ request('from', $from->format('Y-m-d')) }}" class="form-input">
         </div>
         <div>
             <label class="form-label">Sampai</label>
-            <input type="date" name="to"
-                   value="{{ request('to', now()->format('Y-m-d')) }}"
-                   class="form-input">
+            <input type="date" name="to" value="{{ request('to', $to->format('Y-m-d')) }}" class="form-input">
         </div>
         <div>
             <label class="form-label">Event</label>
             <select name="event_id" class="form-input">
                 <option value="">Semua Event</option>
-                @foreach(($events ?? []) as $e)
-                    <option value="{{ $e->id }}" {{ (string)($eventId ?? '') === (string)$e->id ? 'selected' : '' }}>
-                        {{ $e->title }} ({{ optional($e->date)->format('d/m/Y') }})
-                    </option>
+                @foreach($events as $e)
+                    <option value="{{ $e->id }}" {{ (string)$eventId === (string)$e->id ? 'selected' : '' }}>{{ $e->title }} ({{ optional($e->date)->format('d/m/Y') }})</option>
                 @endforeach
             </select>
         </div>
         <div style="display:flex; align-items:flex-end; gap:8px;">
             <button class="btn btn-primary">Filter</button>
-            <a href="{{ route('admin.dashboard') }}" class="btn btn-secondary">Reset</a>
+            <a href="{{ route('admin.reports.dashboard') }}" class="btn btn-secondary">Reset</a>
         </div>
     </form>
 
-    <div class="stats-grid">
-        <div class="stat-card">
-            <p class="stat-card-title">Net Revenue</p>
-            <p class="stat-card-value">Rp {{ number_format($netRevenue ?? 0, 0, ',', '.') }}</p>
-            <p class="stat-card-change"></p>
+    <div style="display:grid; grid-template-columns: repeat(3,1fr); gap:12px;">
+        <div class="table-card" style="padding:16px;">
+            <div style="color:var(--admin-muted); font-size:12px;">Net Revenue</div>
+            <div style="font-size:22px; font-weight:700;">Rp {{ number_format($netRevenue, 0, ',', '.') }}</div>
         </div>
-        <div class="stat-card">
-            <p class="stat-card-title">Orders Paid</p>
-            <p class="stat-card-value">{{ number_format($ordersCountPaid ?? 0) }}</p>
-            <p class="stat-card-change"></p>
+        <div class="table-card" style="padding:16px;">
+            <div style="color:var(--admin-muted); font-size:12px;">Orders Paid</div>
+            <div style="font-size:22px; font-weight:700;">{{ number_format($ordersCountPaid) }}</div>
         </div>
-        <div class="stat-card">
-            <p class="stat-card-title">Tickets Sold</p>
-            <p class="stat-card-value">{{ number_format($ticketsSold ?? 0) }}</p>
-            <p class="stat-card-change"></p>
+        <div class="table-card" style="padding:16px;">
+            <div style="color:var(--admin-muted); font-size:12px;">Tickets Sold</div>
+            <div style="font-size:22px; font-weight:700;">{{ number_format($ticketsSold) }}</div>
         </div>
     </div>
 
@@ -93,7 +65,7 @@
     <div class="table-card">
         <div class="table-header"><h3>Penjualan per Event</h3></div>
         <div class="table-container">
-            <table>
+            <table class="table">
                 <thead>
                     <tr>
                         <th>Event</th>
@@ -106,7 +78,7 @@
                     @php($totTickets = 0)
                     @php($totOrders = 0)
                     @php($totRevenue = 0)
-                    @foreach(($perEvent ?? []) as $row)
+                    @foreach($perEvent as $row)
                         @php($totTickets += $row['tickets'])
                         @php($totOrders += $row['orders'])
                         @php($totRevenue += $row['revenue'])
@@ -131,32 +103,21 @@
     </div>
 </div>
 @endrole
-
-{{-- Konten minimal untuk gate_staff tetap tampil --}}
-@unlessrole('admin')
-<div class="table-card">
-    <div class="table-header"><h3>Dashboard</h3></div>
-    <p>Selamat datang. Anda memiliki akses ke Gate Scanner dari menu samping.</p>
-</div>
-@endunlessrole
 @endsection
 
 @section('additional-js')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     (function(){
-        if (!@json(Auth::user()->hasRole('admin'))) return;
-
-        var revenueLabels = @json($dailyLabels ?? []);
-        var revenueData = @json($dailyNetRevenue ?? []);
+        // Line chart: net revenue per day
         var revCtx = document.getElementById('revenueChart').getContext('2d');
-        new Chart(revCtx, {
+        var revChart = new Chart(revCtx, {
             type: 'line',
             data: {
-                labels: revenueLabels,
+                labels: @json($dailyLabels),
                 datasets: [{
                     label: 'Net Revenue',
-                    data: revenueData,
+                    data: @json($dailyNetRevenue),
                     borderColor: '#2563eb',
                     backgroundColor: 'rgba(37,99,235,0.1)',
                     tension: 0.25,
@@ -171,10 +132,11 @@
             }
         });
 
-        var events = @json(array_map(fn($r) => $r['event'], ($perEvent ?? [])));
-        var tickets = @json(array_map(fn($r) => $r['tickets'], ($perEvent ?? [])));
+        // Bar chart: tickets sold per event
+        var events = @json(array_map(fn($r) => $r['event'], $perEvent));
+        var tickets = @json(array_map(fn($r) => $r['tickets'], $perEvent));
         var evtCtx = document.getElementById('eventChart').getContext('2d');
-        new Chart(evtCtx, {
+        var evtChart = new Chart(evtCtx, {
             type: 'bar',
             data: {
                 labels: events,
@@ -185,8 +147,12 @@
                 }]
             },
             options: {
+                indexAxis: 'x',
                 responsive: true,
-                scales: { y: { beginAtZero: true } }
+                plugins: { legend: { display: true } },
+                scales: {
+                    y: { beginAtZero: true }
+                }
             }
         });
     })();

@@ -21,6 +21,7 @@
             <nav style="display:flex; gap:16px; align-items:center;">
                 <a href="{{ route('user.events.index') }}" class="btn btn-sm btn-outline">Event</a>
                 @auth
+                    <a href="{{ route('user.dashboard') }}" class="btn btn-sm btn-outline">Dashboard</a>
                     <a href="{{ route('logout') }}" class="btn btn-sm btn-secondary"
                        onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Logout</a>
                     <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display:none;">

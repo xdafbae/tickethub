@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\GateEntryController;
 use App\Http\Controllers\Auth\AuthController;
@@ -110,6 +111,15 @@ Route::prefix('admin')->middleware(['auth','verified'])->group(function () {
         Route::get('events/{event}/seat-map', [AdminSeatMapController::class, 'builder'])->name('admin.seat_map.builder');
         Route::post('events/{event}/seat-map', [AdminSeatMapController::class, 'save'])->name('admin.seat_map.save');
         Route::resource('promos', AdminPromoController::class)->names('admin.promos');
+
+        // Order & Refund Management (Admin)
+        Route::resource('orders', AdminOrderController::class)
+            ->only(['index','show'])
+            ->names('admin.orders');
+        Route::post('orders/{order}/status', [AdminOrderController::class, 'updateStatus'])
+            ->name('admin.orders.status');
+        Route::post('orders/{order}/refund', [AdminOrderController::class, 'refund'])
+            ->name('admin.orders.refund');
     });
 });
 
